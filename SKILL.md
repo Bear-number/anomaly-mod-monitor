@@ -1,6 +1,6 @@
 # anomaly-mod-monitor — 异常(Anomaly) 新MOD监控
 
-监控 ModDB 上 S.T.A.L.K.E.R. Anomaly 分类（addons）的新发布与近期更新，对比缓存后只报增量。**ModDB 直连被 Cloudflare 挡**（2026-10-30 复测：直连 `GET` 回 `403` + `Just a moment...`；无头 Chrome 也是挑战页），所以抓取要真浏览器——现在**脚本自己起**，不用人开页面。
+监控 ModDB 上 S.T.A.L.K.E.R. Anomaly 分类（addons）的新发布与近期更新，对比缓存后只报增量。抓取走真浏览器，由**脚本自己起**，不用人开页面。
 
 触发说法：「检查异常MOD」「异常有新MOD吗」。
 
@@ -9,7 +9,7 @@
 py -3 D:\Alife\Storage\Skills\anomaly-mod-monitor\scripts\cdp_grab.py
 py -3 D:\Alife\Storage\Skills\anomaly-mod-monitor\scripts\moddb_monitor.py --from-file D:\Alife\Storage\SkillData\moddb_grab.txt --update
 ```
-`cdp_grab.py` 用**独立 user-data-dir** 起一个正常的（非无头）msedge/chrome，连它的 DevTools 调试口，导航到列表页后轮询 `Runtime.evaluate` 跑抽取 JS，抓到就写 `SkillData\moddb_grab.txt` 并把自己起的浏览器进程关掉（窗口挪到屏幕外，不抢你焦点）。2026-10-30 本机实测：连跑三次分别 47 / 47 / 45 条，全是 `2026-10-30T08:39:48+00:00` 这种绝对时间。
+`cdp_grab.py` 用**独立 user-data-dir** 起一个正常的（非无头）msedge/chrome，连它的 DevTools 调试口，导航到列表页后轮询 `Runtime.evaluate` 跑抽取 JS，抓到就写 `SkillData\moddb_grab.txt` 并把自己起的浏览器进程关掉（窗口挪到屏幕外，不抢你焦点）。
 
 参数：`--pages 2`（连抓 `?page=1,2` 并按 slug 去重，默认 1）、`--timeout 100`、`--out`、`--browser`、`--print`。比对端：`--hours 48`、`--max-age 60`（**默认拒绝 60 分钟前的旧抓取文件**——旧文件冒充新结果会一路假报「无新增/更新」；确实要用旧的传 `--max-age 0`）、`--selftest --print`（离线自检，不碰真缓存）。
 
@@ -62,7 +62,7 @@ CDP 与接收器用的是**同一种行格式**，`--from-file` 那边不用改�
 - 纯型号/缩写没有可译成分的（`MTCompressor`、`LEWDOOM`）就音译或留原文，别硬翻
 - 拿不准就直译。**不要为了通顺编一个跟原名对不上的名字**——日报是给人找 MOD 用的，译名和原名对不上比没有译名更糟
 
-## 链接铁律（2026-09-12 主人定稿）
+## 链接格式
 每条必须给真实可点的完整链接，禁占位符：`https://www.moddb.com/mods/stalker-anomaly/addons/{slug}`。
 
 ## 注意

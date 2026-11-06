@@ -2,11 +2,9 @@
 # -*- coding: utf-8 -*-
 r"""异常（ModDB）列表页的自动抓取——脚本自己起**真浏览器**，用 CDP 取数据，不用人开页面
 
-为什么要真浏览器：ModDB 前面是 Cloudflare。2026-10-30 本机复测，直连 `GET` 回 `403` +
-`Just a moment...`；无头 Chrome 拿到的也是挑战页（2026-10-22 实测）。而真人开浏览器一直抓得动，
-所以这一步只能借真浏览器：用**独立的 user-data-dir** 起一个正常的（非无头）msedge/chrome 窗口，
-连它的 DevTools 调试口，导航后轮询 `Runtime.evaluate` 跑抽取 JS，抓到就写盘、把自己起的那个
-浏览器进程关掉。数据只在脚本与文件之间走，不进对话（和接收器解决的是同一个问题）。
+用**独立的 user-data-dir** 起一个正常的（非无头）msedge/chrome 窗口，连它的 DevTools
+调试口，导航后轮询 `Runtime.evaluate` 跑抽取 JS，抓到就写盘、把自己起的那个浏览器进程关掉。
+数据只在脚本与文件之间走，不进对话。
 
 抽取 JS 与 SKILL.md 里那段一致（ModDB 标题在 `h4 a`、绝对时间在 `time[datetime]`），输出每行
 `slug :: 标题 :: 绝对时间`，直接交给 `moddb_monitor.py --from-file` 比对，格式与接收器落盘一致。
@@ -102,8 +100,7 @@ def free_port():
 
 
 def run_profile(base_profile):
-    """每次一个独立 profile：上一轮的浏览器进程还没退干净时，共用 profile 会让新起的实例直接附身到旧
-    进程上、调试口根本不开（本机实测踩到）。留下 24 小时内的目录不碍事，超时的顺手清掉。"""
+    """每次一个独立 profile，避免旧进程占用调试口。留下 24 小时内的目录，超时的清掉。"""
     stamp = datetime.now(LOCAL_TZ).strftime("%Y%m%d-%H%M%S")
     keep = []
     try:
@@ -133,9 +130,7 @@ def launch(browser, port, profile, start_url):
 
 
 def open_browser(browser, base_profile, start_url, patience):
-    """先用**固定 profile**：Nexus 那个列表页要靠它留下的 cookie 才渲染（每次换全新 profile 时
-    十次有七八次只回壳子、0 条）。固定 profile 被上一轮没退干净的进程占着时调试口永远不起来，
-    这时退到一次性 profile 再试一次——ModDB 两种都稳，Nexus 靠这条不掉链子。"""
+    """先用**固定 profile**；被进程占用导致调试口起不来时，退到一次性 profile 再试一次。"""
     for profile in (base_profile, run_profile(base_profile)):
         port = free_port()
         process = launch(browser, port, profile, start_url)
